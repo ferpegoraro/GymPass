@@ -2,6 +2,7 @@
   // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
     // File Layout
+    "baseUrl": "./",
     // "rootDir": "./src",
     // "outDir": "./dist",
 
@@ -37,6 +38,11 @@
     "strict": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+
+    // Path aliases
+    "paths": {
+      "@/*": ["src/*"]
+    }
   }
 }
