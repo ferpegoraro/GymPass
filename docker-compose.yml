@@ -6,6 +6,11 @@ services:
     ports:
       - 5432:5432
     environment:
-      - POSTGRESQL_DATABASE=apisolid
-      - POSTGRESQL_USERNAME=docker
-      - POSTGRESQL_PASSWORD=docker
+      POSTGRESQL_DATABASE: ${POSTGRES_DB}
+      POSTGRESQL_USERNAME: ${POSTGRES_USER}
+      POSTGRESQL_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/bitnami/postgresql
+volumes:
+  postgres_data:
+    driver: local
