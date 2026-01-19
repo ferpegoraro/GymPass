@@ -1,26 +1,105 @@
-import { InMemoryUsersRepository } from "@/repositories/in-memory/in-memory-repository";
-import { describe, it, expect, beforeEach } from "vitest";
-import { hash } from "bcryptjs";
-import { GetUserProfileUseCase } from "./get-user-profile";
-import { ResourceNotFoundError } from "./errors/resource-not-found-error";
+import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { InMemoryCheckInsRepository } from "@/repositories/in-memory/in-memory-check-ins-repository";
 import { CheckInUseCase } from "./check-in";
+import { InMemoryGymsRepository } from "@/repositories/in-memory/in-memory-gyms-repository";
+import { Decimal } from "@prisma/client/runtime/index-browser";
 
 let checkInsRepository: InMemoryCheckInsRepository;
+let gymsRepository: InMemoryGymsRepository;
 let sut: CheckInUseCase;
 
-describe("Get User Profile Use Case", () => {
+describe("Check-in Use Case", () => {
   beforeEach(() => {
     checkInsRepository = new InMemoryCheckInsRepository();
-    sut = new CheckInUseCase(checkInsRepository);
+    gymsRepository = new InMemoryGymsRepository();
+    sut = new CheckInUseCase(checkInsRepository, gymsRepository);
+
+    vi.useFakeTimers();
+
+    gymsRepository.items.push({
+      id: "gym-01",
+      title: "Gym 01",
+      description: "",
+      phone: "123456789",
+      latitude: new Decimal(-23.6193291),
+      longitude: new Decimal(-46.757523),
+    });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("should be able to check in", async () => {
     const { checkIn } = await sut.execute({
       gymId: "gym-01",
       userId: "user-01",
+      userLatitude: -23.6193291,
+      userLongitude: -46.757523,
     });
 
     expect(checkIn.id).toEqual(expect.any(String));
+  });
+
+  it("should not be able to check in twice in the same day", async () => {
+    vi.setSystemTime(new Date(2023, 1, 1, 12));
+
+    await sut.execute({
+      gymId: "gym-01",
+      userId: "user-01",
+      userLatitude: -23.6193291,
+      userLongitude: -46.757523,
+    });
+
+    await expect(() =>
+      sut.execute({
+        gymId: "gym-01",
+        userId: "user-01",
+        userLatitude: -23.6193291,
+        userLongitude: -46.757523,
+      }),
+    ).rejects.toBeInstanceOf(Error);
+  });
+
+  it("should be able to check in on different days", async () => {
+    vi.setSystemTime(new Date(2023, 1, 1, 12));
+
+    await sut.execute({
+      gymId: "gym-01",
+      userId: "user-01",
+      userLatitude: -23.6193291,
+      userLongitude: -46.757523,
+    });
+
+    vi.setSystemTime(new Date(2023, 1, 2, 12));
+
+    const { checkIn } = await sut.execute({
+      gymId: "gym-01",
+      userId: "user-01",
+      userLatitude: -23.6193291,
+      userLongitude: -46.757523,
+    });
+
+    expect(checkIn.id).toEqual(expect.any(String));
+  });
+
+  it("should not be able to check in on distant gym", async () => {
+    gymsRepository.items.push({
+      id: "gym-02",
+      title: "Gym 02",
+      description: "",
+      phone: "123456789",
+      latitude: new Decimal(-23.6193291),
+      longitude: new Decimal(-46.757523),
+    });
+
+    await expect(() =>
+      sut.execute({
+        gymId: "gym-02",
+        userId: "user-01",
+        userLatitude: -23.6189094,
+        userLongitude: -46.7265118,
+      }),
+    ).rejects.toBeInstanceOf(Error);
   });
 });
