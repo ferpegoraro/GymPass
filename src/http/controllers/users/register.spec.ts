@@ -13,6 +13,8 @@ describe("Register E2E,", () => {
   });
 
   beforeEach(async () => {
+    await prisma.checkIn.deleteMany();
+    await prisma.gym.deleteMany();
     await prisma.user.deleteMany();
   });
 

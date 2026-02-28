@@ -7,5 +7,6 @@ export default defineConfig({
     include: ["src/http/controllers/**/*.spec.ts"],
     environment:
       "./prisma/vitest-environment-prisma/prisma-test-environment.ts",
+    fileParallelism: false,
   },
 });

@@ -3,7 +3,7 @@ import { app } from "@/app";
 import { describe, expect, it, beforeAll, afterAll, beforeEach } from "vitest";
 import { prisma } from "@/lib/prisma";
 
-describe("Profile E2E,", () => {
+describe("Authenticate E2E,", () => {
   beforeAll(async () => {
     await app.ready();
   });
@@ -13,10 +13,12 @@ describe("Profile E2E,", () => {
   });
 
   beforeEach(async () => {
+    await prisma.checkIn.deleteMany();
+    await prisma.gym.deleteMany();
     await prisma.user.deleteMany();
   });
 
-  it("should be able to get user profile", async () => {
+  it("should be able to authenticate", async () => {
     await request(app.server).post("/users").send({
       name: "John Doe",
       email: "john.doe@example.com",
@@ -28,17 +30,7 @@ describe("Profile E2E,", () => {
       password: "123456",
     });
 
-    const { token } = authResponse.body;
-
-    const profileResponse = await request(app.server)
-      .get("/me")
-      .set("Authorization", `Bearer ${token}`);
-
-    expect(profileResponse.statusCode).toBe(200);
-    expect(profileResponse.body.user).toEqual(
-      expect.objectContaining({
-        email: "john.doe@example.com",
-      }),
-    );
+    expect(authResponse.statusCode).toBe(200);
+    expect(authResponse.body).toHaveProperty("token");
   });
 });
