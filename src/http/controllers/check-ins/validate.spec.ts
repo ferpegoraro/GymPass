@@ -1,6 +1,6 @@
 import request from "supertest";
 import { app } from "@/app";
-import { describe, expect, it, beforeAll, afterAll, beforeEach } from "vitest";
+import { describe, expect, it, beforeAll, afterAll } from "vitest";
 import { prisma } from "@/lib/prisma";
 import { createAndAuthenticateUser } from "@/utils/test/create-and-authenticate-user";
 
@@ -13,14 +13,8 @@ describe("Validate Check-in E2E,", () => {
     await app.close();
   });
 
-  beforeEach(async () => {
-    await prisma.checkIn.deleteMany();
-    await prisma.gym.deleteMany();
-    await prisma.user.deleteMany();
-  });
-
   it("should be able to validate a check-in", async () => {
-    const { token } = await createAndAuthenticateUser(app);
+    const { token } = await createAndAuthenticateUser(app, true);
 
     const user = await prisma.user.findFirstOrThrow();
 

@@ -1,6 +1,6 @@
 import request from "supertest";
 import { app } from "@/app";
-import { describe, expect, it, beforeAll, afterAll, beforeEach } from "vitest";
+import { describe, expect, it, beforeAll, afterAll } from "vitest";
 import { prisma } from "@/lib/prisma";
 
 describe("Register E2E,", () => {
@@ -10,12 +10,6 @@ describe("Register E2E,", () => {
 
   afterAll(async () => {
     await app.close();
-  });
-
-  beforeEach(async () => {
-    await prisma.checkIn.deleteMany();
-    await prisma.gym.deleteMany();
-    await prisma.user.deleteMany();
   });
 
   it("should be able to register", async () => {

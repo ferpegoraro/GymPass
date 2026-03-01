@@ -20,14 +20,37 @@ export async function authenticate(
     const { user } = await authenticateUseCase.execute({ email, password });
 
     const token = await reply.jwtSign(
-      {},
+      {
+        role: user.role,
+      },
       {
         sign: {
           sub: user.id,
         },
       },
     );
-    return reply.status(200).send({ token });
+
+    const refreshToken = await reply.jwtSign(
+      {
+        role: user.role,
+      },
+      {
+        sign: {
+          sub: user.id,
+          expiresIn: "7 days",
+        },
+      },
+    );
+
+    return reply
+      .setCookie("refreshToken", refreshToken, {
+        path: "/",
+        httpOnly: true,
+        secure: true,
+        sameSite: "strict",
+      })
+      .status(200)
+      .send({ token });
   } catch (err) {
     if (err instanceof InvalidCredentialsError) {
       return reply.status(409).send({ message: err.message });
